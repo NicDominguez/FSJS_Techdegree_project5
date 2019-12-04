@@ -48,10 +48,13 @@ class Employee {
         this.dob = dob
     }
 
+    // removes extra digits from the dob
     cleanDOB() {
         return `${this.dob.slice(5, 7)}/${this.dob.slice(8, 10)}/${this.dob.slice(2, 4)}`
     }
 
+
+    // creates a card using the employee object
     generateCard() {
         let card = document.createElement('DIV');
         const cardHtml = `
@@ -77,6 +80,7 @@ class Employee {
 // HELPER FUNCTIONS
 //---------------------------
 
+// creates an employee object based on the Employee class and pushes that employee to the allEmployees array
 function createClass(data) {
     data.results.forEach((employee, index) => {
         employee = new Employee(
@@ -96,6 +100,7 @@ function createClass(data) {
     })
 }
 
+// Creates a modal window using the employee object from the allEmployees array that matches the id of the object to the index of the card element
 function generateModalCard(object) {
     const modalCard = document.createElement('DIV')
     const modalCardHTML = `
@@ -123,6 +128,7 @@ function generateModalCard(object) {
     gallery.appendChild(modalCard)
 }
 
+// adds the search box to the page
 function appendSeach() {
     const searchBox = document.createElement('FORM')
     const searchHTML = `
@@ -140,7 +146,7 @@ function appendSeach() {
 //---------------------------
 
 gallery.addEventListener('click', (e) => {
-    
+    //generates a modal card only if a modal card is not already present
     if (gallery.lastChild.classList.contains("card")) {
         let target = e.target.closest(".card")
         let index = target.getAttribute("index")
@@ -148,6 +154,7 @@ gallery.addEventListener('click', (e) => {
         generateModalCard(employee)
     }
 
+    // establishes functions of the various modal card buttons
     if (gallery.lastChild.classList.contains("modal-container")) {
         const btn = e.target;
         const modalCard = document.getElementsByClassName("modal-container")[0];
@@ -168,7 +175,7 @@ gallery.addEventListener('click', (e) => {
     }
 })
 
-
+// creates filter function for search field
 searchContainer.addEventListener('keyup', (e) => {
     let displayArray = []  
     const searchInput = document.getElementById("search-input")
