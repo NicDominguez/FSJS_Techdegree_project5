@@ -8,7 +8,11 @@ const overlay = document.getElementById('overlay')
 const searchContainer = document.getElementsByClassName('search-container')[0]
 const allEmployees = []
 
+//---------------------------
+// ON PAGE LOAD
+//---------------------------
 
+appendSeach()
 
 //---------------------------
 // FETCH FUNCTIONS
@@ -16,25 +20,22 @@ const allEmployees = []
 
 fetch('https://randomuser.me/api/?nat=us,gb&results=12')
     .then(response => response.json())
-    .then(data => createClass(data))
+    .then(data => {
+        createClass(data)
+        allEmployees.forEach((employee) => {
+            employee.generateCard()
+        })
+
+    })
     .catch(err => console.log(err));
-
-//---------------------------
-// ON PAGE LOAD
-//---------------------------
-
-//NOT WORKING ON PAGE LOAD AND DON'T KNOW WHY
-allEmployees.forEach((employee) => {
-    employee.generateCard()
-})
-
 
 //---------------------------
 // Class Construction
 //---------------------------
 
 class Employee {
-    constructor(pictureURL, firstName, lastName, email, street, city, state, postcode, phone, dob) {
+    constructor(id, pictureURL, firstName, lastName, email, street, city, state, postcode, phone, dob) {
+        this.id = id
         this.pictureURL = pictureURL
         this.firstName = firstName;
         this.lastName = lastName;
@@ -64,30 +65,11 @@ class Employee {
             </div>
             `;
         card.classList.add('card')
+        card.setAttribute("index", `${this.id}`)
         card.innerHTML = cardHtml;
         gallery.appendChild(card);    
     }
 
-    generateModalCard() {
-    const modalCard = document.createElement('DIV')
-    const modalCardHTML = `
-        <div class="modal">
-            <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
-            <div class="modal-info-container">
-                <img class="modal-img" src="${this.pictureURL}" alt="profile picture">
-                <h3 id="name" class="modal-name cap">${this.firstName} ${this.lastName}</h3>
-                <p class="modal-text">${this.email}</p>
-                <p class="modal-text cap">${this.city}</p>
-                <hr>
-                <p class="modal-text">${this.phone}</p>
-                <p class="modal-text">${this.street}, ${this.city}, ${this.state} ${this.postcode}</p>
-                <p class="modal-text">Birthday: ${this.cleanDOB()}</p>
-            </div>
-        `;
-    modalCard.classList.add('modal-container')    
-    modalCard.innerHTML = modalCardHTML
-    gallery.appendChild(modalCard)
-    }
 }
    
 
@@ -96,8 +78,9 @@ class Employee {
 //---------------------------
 
 function createClass(data) {
-    data.results.forEach((employee) => {
+    data.results.forEach((employee, index) => {
         employee = new Employee(
+            index, //id number
             employee.picture.large, //pictureURL
             employee.name.first, //firstName
             employee.name.last, //lastName
@@ -113,64 +96,102 @@ function createClass(data) {
     })
 }
 
+function generateModalCard(object) {
+    const modalCard = document.createElement('DIV')
+    const modalCardHTML = `
+        <div class="modal">
+            <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
+            <div class="modal-info-container">
+                <img class="modal-img" src="${object.pictureURL}" alt="profile picture">
+                <h3 id="name" class="modal-name cap">${object.firstName} ${object.lastName}</h3>
+                <p class="modal-text">${object.email}</p>
+                <p class="modal-text cap">${object.city}</p>
+                <hr>
+                <p class="modal-text">${object.phone}</p>
+                <p class="modal-text">${object.street}, ${object.city}, ${object.state} ${object.postcode}</p>
+                <p class="modal-text">Birthday: ${object.cleanDOB()}</p>
+            </div>
+            <div class="modal-btn-container">
+                <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
+                <button type="button" id="modal-next" class="modal-next btn">Next</button>
+            </div>
+        </div>
+        `;
+    modalCard.classList.add('modal-container')
+    modalCard.setAttribute("index", `${object.id}`)
+    modalCard.innerHTML = modalCardHTML
+    gallery.appendChild(modalCard)
+}
 
+function appendSeach() {
+    const searchBox = document.createElement('FORM')
+    const searchHTML = `
+        <form action="#" method="get">
+            <input type="search" id="search-input" class="search-input" placeholder="Search...">
+            <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+        </form>
+        `;
+    searchBox.innerHTML = searchHTML 
+    searchContainer.appendChild(searchBox)
+}
 
 //---------------------------
 // EVENT LISTENERS
 //---------------------------
 
-document.addEventListener("DOMContentLoaded", function () {
-    gallery.addEventListener('click', (e) => {
-        const cardForFocus = e.target.closest('.card');
-        cardForFocus.id = 'focuscard';
-        generateModalCard(cardForFocus)
-        overlay.style.display = 'block';
-    })
-
-})
-
 gallery.addEventListener('click', (e) => {
-    let btn = e.target;
-    const focusCard = document.getElementById('focuscard')
-    const modalCard = document.getElementById("modalcard");
-    const previousCard = focusCard.previousElementSibling
-    const nextCard = focusCard.nextElementSibling
-
-    if (btn.id === 'close-btn') {
-        overlay.style.display = "none"
-        focusCard.removeAttribute('id')
-        modalCard.remove()
-    }
-    else if (btn.id === 'left-arrow' && previousCard !== null) {
-        focusCard.removeAttribute("id");
-        previousCard.id = "focuscard"
-        modalCard.remove()
-        generateModalCard(previousCard)
-    } else if (btn.id === 'right-arrow' && nextCard !== null) {
-        focusCard.removeAttribute("id");
-        nextCard.id = "focuscard"
-        modalCard.remove()
-        generateModalCard(nextCard)
+    
+    if (gallery.lastChild.classList.contains("card")) {
+        let target = e.target.closest(".card")
+        let index = target.getAttribute("index")
+        let employee = allEmployees[index]
+        generateModalCard(employee)
     }
 
+    if (gallery.lastChild.classList.contains("modal-container")) {
+        const btn = e.target;
+        const modalCard = document.getElementsByClassName("modal-container")[0];
+        const index = parseInt(modalCard.getAttribute("index"), 10);
+        const nextCard = allEmployees[index + 1]
+        const previousCard = allEmployees[index - 1]
+
+        if (btn.id === 'modal-close-btn' || btn.parentNode.id === 'modal-close-btn') {
+            gallery.removeChild(gallery.lastChild)
+        }
+        else if (btn.id === 'modal-prev' && previousCard !== undefined) {
+            gallery.removeChild(gallery.lastChild)
+            generateModalCard(previousCard)
+        } else if (btn.id === 'modal-next' && nextCard !== undefined) {
+            gallery.removeChild(gallery.lastChild)
+            generateModalCard(nextCard)
+        }
+    }
 })
+
 
 searchContainer.addEventListener('keyup', (e) => {
-    let filterText = filter.value.toLowerCase();
-    cardsNodeList = document.getElementsByClassName('card');
-    const cardsArray = Array.prototype.slice.call(document.getElementsByClassName('card'));
-    // show all cards again
-    cardsArray.forEach(card => card.style.display = 'flex')
+    let displayArray = []  
+    const searchInput = document.getElementById("search-input")
+    let filterText = searchInput.value.toLowerCase();
 
     // loop through first and last name
-    cardsArray.forEach(card => {
-        let name = card.children[1].children[0].innerText.toLowerCase();
-        if (name.includes(filterText) === false) {
-            card.style.display = 'none'
+    allEmployees.forEach((employee) => {
+        let firstName = employee.firstName.toLowerCase()
+        let lastName = employee.lastName.toLowerCase()
+        if (firstName.includes(filterText) || lastName.includes(filterText)) {
+            displayArray.push(employee)
         }
-
     })
 
+    // remove all current cards
+    while (gallery.lastChild) {
+        gallery.removeChild(gallery.lastChild)
+    }
+
+     //generate cards for display array employees
+    displayArray.forEach((employee) => {
+        employee.generateCard(employee)
+    })
 })
 
 
