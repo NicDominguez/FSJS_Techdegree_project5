@@ -113,7 +113,7 @@ function generateModalCard(object) {
                 <p class="modal-text cap">${object.city}</p>
                 <hr>
                 <p class="modal-text">${object.phone}</p>
-                <p class="modal-text">${object.street}, ${object.city}, ${object.state} ${object.postcode}</p>
+                <p class="modal-text">${object.street.number} ${object.street.name}, ${object.city}, ${object.state} ${object.postcode}</p>
                 <p class="modal-text">Birthday: ${object.cleanDOB()}</p>
             </div>
             <div class="modal-btn-container">
